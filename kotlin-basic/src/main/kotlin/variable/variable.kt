@@ -1,4 +1,4 @@
-package wh.duckbill.variable
+package org.example.variable
 
 var x = 3
 
