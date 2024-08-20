@@ -1,4 +1,4 @@
-package inheritance
+package inheritance_class
 
 open class Dog {
     open var age: Int = 0
