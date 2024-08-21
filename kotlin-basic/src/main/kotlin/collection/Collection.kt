@@ -94,7 +94,7 @@ fun main() {
 
     // sequence filter list
     // filter 절을 여러개 사용하더라도 마지막 toList 부분에서만 list 를 생성하기 때문에 메모리 효율적
-    var sequenceFilterList = upperList.asSequence()
+    val sequenceFilterList = upperList.asSequence()
         .filter { it == "A" || it == "C" }
         .filter { it == "C" }
         .toList()
