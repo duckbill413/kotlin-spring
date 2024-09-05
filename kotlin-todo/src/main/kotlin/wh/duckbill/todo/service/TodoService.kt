@@ -1,6 +1,5 @@
 package wh.duckbill.todo.service
 
-import org.example.todo.domain.Todo
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -8,6 +7,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import wh.duckbill.todo.api.model.TodoRequest
+import wh.duckbill.todo.domain.Todo
 import wh.duckbill.todo.domain.TodoRepository
 import java.time.LocalDateTime
 

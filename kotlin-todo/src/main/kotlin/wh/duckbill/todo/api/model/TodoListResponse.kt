@@ -1,7 +1,7 @@
 package wh.duckbill.todo.api.model
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import org.example.todo.domain.Todo
+import wh.duckbill.todo.domain.Todo
 
 data class TodoListResponse(
     val items: List<TodoResponse>,

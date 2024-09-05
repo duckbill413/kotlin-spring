@@ -1,6 +1,6 @@
 package wh.duckbill.todo.api.model
 
-import org.example.todo.domain.Todo
+import wh.duckbill.todo.domain.Todo
 import java.time.LocalDateTime
 
 data class TodoResponse(

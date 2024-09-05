@@ -1,4 +1,4 @@
-package org.example.todo.domain
+package wh.duckbill.todo.domain
 
 import jakarta.persistence.*
 import java.time.LocalDateTime
