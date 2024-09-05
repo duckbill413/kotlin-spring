@@ -28,7 +28,7 @@ class TodoController(
 
     @PutMapping("/{id}")
     fun update(@PathVariable id: Long, @RequestBody todoRequest: TodoRequest) =
-        ok(TodoResponse.of(todoService.update(todoRequest)))
+        ok(TodoResponse.of(todoService.update(id, todoRequest)))
 
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long): ResponseEntity<Unit> {

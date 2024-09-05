@@ -14,6 +14,7 @@ data class TodoResponse(
     companion object {
         fun of(todo: Todo?): TodoResponse {
             checkNotNull(todo) { "Todo is null" }
+            checkNotNull(todo.id) { "Todo Id is null" }
 
             return TodoResponse(
                 id = todo.id,
