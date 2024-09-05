@@ -1,4 +1,4 @@
-package org.example.todo
+package wh.duckbill.todo
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class KotlinTodoApplication
 
 fun main(args: Array<String>) {
-	runApplication<KotlinTodoApplication>(*args)
+    runApplication<KotlinTodoApplication>(*args)
 }
