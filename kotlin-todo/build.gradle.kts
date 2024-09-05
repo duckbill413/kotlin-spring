@@ -40,6 +40,10 @@ dependencies {
     // 필수적으로 들어가는 의존성
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+
+    // https://mvnrepository.com/artifact/com.ninja-squad/springmockk
+    testImplementation("com.ninja-squad:springmockk:4.0.2")
+
 }
 
 kotlin {
