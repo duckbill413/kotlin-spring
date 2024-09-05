@@ -9,12 +9,11 @@ data class TodoResponse(
     var description: String,
     var done: Boolean,
     var createdAt: LocalDateTime,
-    var updatedAt: LocalDateTime,
+    var updatedAt: LocalDateTime?,
 ) {
     companion object {
-        fun of(todo: Todo?): TodoResponse {
-            checkNotNull(todo) { "Todo is null" }
-            checkNotNull(todo.id) { "Todo Id is null" }
+        fun of(todo: Todo): TodoResponse {
+            checkNotNull(todo.id)
 
             return TodoResponse(
                 id = todo.id,

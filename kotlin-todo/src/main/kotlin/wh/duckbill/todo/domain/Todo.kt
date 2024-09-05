@@ -28,7 +28,7 @@ class Todo(
     @Column(name = "created_at")
     var createdAt: LocalDateTime,
     @Column(name = "updated_at")
-    var updatedAt: LocalDateTime
+    var updatedAt: LocalDateTime? = null,
 ) {
     fun update(title: String, description: String, done: Boolean) {
         this.title = title
