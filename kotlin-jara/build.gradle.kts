@@ -31,7 +31,7 @@ subprojects {
         implementation("com.auth0:java-jwt:4.4.0")
 
         // https://mvnrepository.com/artifact/io.github.oshai/kotlin-logging-jvm
-        runtimeOnly("io.github.oshai:kotlin-logging-jvm:7.0.0")
+        implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
 
         // kotlin
         implementation("org.jetbrains.kotlin:kotlin-reflect")
