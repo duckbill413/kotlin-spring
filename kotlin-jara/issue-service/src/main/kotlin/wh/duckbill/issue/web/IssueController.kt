@@ -13,6 +13,12 @@ import wh.duckbill.issue.service.model.IssueRequest
 class IssueController(
     private val issueService: IssueService,
 ) {
+    /**
+     * 이슈 생성 API
+     * @param authUser 인증 유저 정보
+     * @param request 생성하고자 하는 이슈 정보
+     * @return IssueResponse 생성된 이슈 정보
+     */
     @PostMapping
     fun create(
         authUser: AuthUser,
