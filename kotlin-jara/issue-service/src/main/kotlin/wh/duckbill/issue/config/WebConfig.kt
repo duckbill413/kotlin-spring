@@ -23,7 +23,7 @@ class WebConfig(
     // 스프링은 컨트롤러 메서드의 인자를 처리할 때 AuthUserHandlerArgResolver 를 사용
     override fun addArgumentResolvers(argumentResolvers: MutableList<HandlerMethodArgumentResolver>) {
         argumentResolvers.apply {
-            add(authUserHandlerArgResolver)
+            add(authUserHandlerArgResolver) // AuthUser 를 받는 Controller 에 전달
         }
     }
 }
@@ -32,6 +32,7 @@ class WebConfig(
  * HandlerMethodArgumentResolver
  *
  * 사용자 인증 정보를 처리하는 커스텀 HandlerMethodArgumentResolver
+ * Controller의 메소드 인자로 AuthUser가 있는 경우 생성
  */
 @Component
 class AuthUserHandlerArgResolver : HandlerMethodArgumentResolver {
@@ -47,6 +48,7 @@ class AuthUserHandlerArgResolver : HandlerMethodArgumentResolver {
      * resolveArgument
      *
      * 실제로 컨트롤러 메서드의 파라미터에 값을 제공하는 역할을 수행
+     * 더미 AuthUser 를 생성
      * @param parameter 메서드 파라미터에 대한 메타정보를 제공
      * @param mavContainer MVC에서 사용하는 컨테이너로, 주로 ModelAndView 를 관리
      * @param webRequest 현재 HTTP 요청 정보를 담고 있는 객체
