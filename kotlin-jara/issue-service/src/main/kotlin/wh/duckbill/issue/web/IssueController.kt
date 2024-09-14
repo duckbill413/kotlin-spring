@@ -1,10 +1,8 @@
 package wh.duckbill.issue.web
 
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import wh.duckbill.issue.config.AuthUser
+import wh.duckbill.issue.domain.enums.IssueStatus
 import wh.duckbill.issue.service.IssueService
 import wh.duckbill.issue.service.model.IssueRequest
 
@@ -24,4 +22,10 @@ class IssueController(
         authUser: AuthUser,
         @RequestBody request: IssueRequest
     ) = issueService.create(authUser.userId, request)
+
+    @GetMapping
+    fun getAll(
+        authUser: AuthUser,
+        @RequestParam(required = false, defaultValue = "TODO") status: IssueStatus
+    ) = issueService.getAll(status)
 }

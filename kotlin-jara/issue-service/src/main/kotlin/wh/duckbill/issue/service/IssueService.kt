@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import wh.duckbill.issue.domain.Issue
 import wh.duckbill.issue.domain.IssueRepository
+import wh.duckbill.issue.domain.enums.IssueStatus
 import wh.duckbill.issue.service.model.IssueRequest
 import wh.duckbill.issue.service.model.IssueResponse
 
@@ -23,5 +24,11 @@ class IssueService(
         )
 
         return IssueResponse(issueRepository.save(issue))
+    }
+
+    @Transactional(readOnly = true)
+    fun getAll(status: IssueStatus): List<IssueResponse>? {
+        return issueRepository.findAllByStatusOrderByCreatedAtDesc(status)
+            ?.map { IssueResponse(it) }
     }
 }
