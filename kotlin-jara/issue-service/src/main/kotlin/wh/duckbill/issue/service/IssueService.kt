@@ -27,8 +27,7 @@ class IssueService(
     }
 
     @Transactional(readOnly = true)
-    fun getAll(status: IssueStatus): List<IssueResponse>? {
-        return issueRepository.findAllByStatusOrderByCreatedAtDesc(status)
-            ?.map { IssueResponse(it) }
-    }
+    fun getAll(status: IssueStatus): List<IssueResponse> =
+        issueRepository.findAllByStatusOrderByCreatedAtDesc(status)?.map { IssueResponse(it) }
+            ?: emptyList()
 }
