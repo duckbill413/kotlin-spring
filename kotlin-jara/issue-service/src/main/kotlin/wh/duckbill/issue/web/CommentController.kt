@@ -1,5 +1,6 @@
 package wh.duckbill.issue.web
 
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import wh.duckbill.issue.config.AuthUser
 import wh.duckbill.issue.service.CommentService
@@ -23,4 +24,12 @@ class CommentController(
         @PathVariable commentId: Long,
         @RequestBody request: CommentRequest
     ) = commentService.edit(commentId, authUser.userId, request)
+
+    @DeleteMapping("/{commentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun delete(
+        authUser: AuthUser,
+        @PathVariable issueId: Long,
+        @PathVariable commentId: Long,
+    ) = commentService.delete(issueId, commentId, authUser.userId)
 }
