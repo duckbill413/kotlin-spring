@@ -16,7 +16,7 @@ class Comment(
     @Column
     val username: String,
     @Column
-    val body: String,
+    var body: String,
 ) : BaseEntity() {
 
 }
