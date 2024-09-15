@@ -13,6 +13,8 @@ class Issue(
     val id: Long? = null,
     @Column
     var userId: Long,
+    @OneToMany(fetch = FetchType.EAGER)
+    val comments: MutableList<Comment> = mutableListOf(),
     @Column
     var summary: String,
     @Column
