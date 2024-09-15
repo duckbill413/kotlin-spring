@@ -1,5 +1,6 @@
 package wh.duckbill.issue.web
 
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import wh.duckbill.issue.config.AuthUser
 import wh.duckbill.issue.domain.enums.IssueStatus
@@ -35,10 +36,17 @@ class IssueController(
         @PathVariable id: Long
     ) = issueService.get(id)
 
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     fun edit(
         authUser: AuthUser,
         @PathVariable id: Long,
         @RequestBody request: IssueRequest
     ) = issueService.edit(authUser.userId, id, request)
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun delete(
+        authUser: AuthUser,
+        @PathVariable id: Long,
+    ) = issueService.delete(id)
 }
