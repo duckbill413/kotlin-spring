@@ -1,4 +1,4 @@
-package wh.duckbill.webflux
+package wh.duckbill.webflux.fn
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
