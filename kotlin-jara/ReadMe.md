@@ -647,3 +647,38 @@ val result = client.get()
 ```
 
 - 기존 리액티브 코드를 코루틴으로 변환하고 싶다면 `awaitXXX` 시작하는 확장 함수를 사용하면 즉시 코루틴으로 변환할 수 있다.
+
+**Spring Data R2DBC의 ReactiveCrudRepository에서 코루틴 적용**
+```kotlin
+interface ContentReactiveRepository: ReactiveCrudRepository<Content, Long> {
+    fun findByUserId(userId: Long) : Mono<Content>
+    fun findAllByUserId(userId: Long): Flux<Content>
+}
+
+class ContentService (
+    val repository: ContentReactiveRepository
+) {
+    fun findByUserIdMono(userId: Long): Mono<Content> {
+        return repository.findByUserId(userId)
+    }
+  
+    suspend fun findByUserId(userId: Long): Content {
+        return repository.findByUserId(userId).awaitSingle()
+    }
+}
+```
+- `CoroutineCrudRepository`를 사용하면 `awaitXXX`코드 없이 사용 가능
+```kotlin
+interface ContentCouroutineRepository: CoroutineCrudRepository<Content, Long> {
+    suspend fun findByUserId(userId: Long) : Content?
+    fun findAllByUserId(userId: Long): Flux<Content>
+}
+
+class ContentService(
+    val repository: ContentCouroutineRepository
+) {
+    suspend fun findByUserId(userId: Long): Content {
+        return repository.findByUserId(userId)
+    }
+}
+```
