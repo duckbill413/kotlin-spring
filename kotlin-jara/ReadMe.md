@@ -170,14 +170,14 @@ fun main() {
 
 - 서브젝트의 함수
   > | 함수     | 설명                            |
-  > |--------|-------------------------------|
+    > |--------|-------------------------------|
   > | add    | 서브젝트의 상태를 관찰할 옵저버를 등록한다.      |
   > | remove | 등록된 옵저버를 삭제한다.                |
   > | notify | 서브젝트의 상태가 변경되면 등록된 옵저버에 통지한다. |
 
 - 옵저버의 함수
   > | 함수     | 설명                                            |
-  > |--------|-----------------------------------------------|
+    > |--------|-----------------------------------------------|
   > | update | 서브젝트의 notify 내부에서 호출되며 서브젝트의 변경에 따른 부가 기능을 처리 |
 
 ### 1.2 옵저버 패턴 구현
@@ -372,7 +372,9 @@ public interface Subscriber<T> {
       중 하나만 호출되어야 하며 이후에는
       어떠한 시그널도 발생하선 안되는데 그 이유는 만약 onError가 발생하고 onComplete가 발생한다면 에러가 발생한 것인지 정상적으로 완료되었는지 판단할 수 없기
       때문이다.
+
 ---
+
 # 스프링 WebFlux
 
 ## 1. 프로젝트 리액터
@@ -458,6 +460,7 @@ fun main() {
 - Flux는 Mono와 다르게 다수의 요소를 통지할 수 있다.
 
 ---
+
 # 스프링 WebFlux와 스프링 MVC 비교
 
 ## 2.1 스프링 MVC
@@ -495,3 +498,152 @@ fun main() {
 
 ---
 
+# 스프링 데이터 R2DBC
+
+## 1. R2DBC
+
+### 1.1 R2DBC 이전
+
+- 전통적인 방식의 `JDBC` 드라이버는 하나의 커넥션에 하나의 스레드를 사용하는 `Thread per Connection` 방식
+
+```java
+String selectSql = "SELECT * FROM employees";
+
+try(
+ResultSet resultSet = stmt.executeQuery(selectSql)){
+List<Employee> employees = new ArrayList<>();
+
+    while(resultSet.
+
+next()){
+Employee emp = new Employee();
+        emp.
+
+setid(resultSet.getInt("emp_id"));
+        emp.
+
+setName(resultSet.getString("name"));
+        employees.
+
+add(emp);
+    }
+            }
+```
+
+- Thread per Connection 방식은 데이터베이스로 부터 응답을 받기 전까지는 스레드는 블로킹 됨
+- 높은 처리량과 대규모 애플리케이션을 위해 비동기-논블로킹 데이터베이스 API에 대한 요구가 생김
+- 애플리케이션 로직이 비동기-논블로킹 이더라도 DB드라이버가 JDBC라면 필연적으로 블로킹이 발생하므로 100% 비동기-논블로킹의 성능을 내기 어려웠음
+- 오라클의 `ADBA(Asynchronous Database Access API)` 프로젝트가 표준화 진행중 진행 종료 됨
+
+### 1.2 R2DBC
+
+- `R2DBC(Reactive Relational Database Connectivity)` 는 빠르게 성장 중인 리액티브 기반의 비동기-논블로킹 데이터베이스 드라이버
+- 다양한 데이터베이스를 지원한다.
+    - Oracle, PostgreSQL, H2, MySQL, Google Spanner, MariaDB 등
+- 리액티브 스트림 구현체인 Project Reactor, RxJava 등을 지원
+
+```java
+connection.createStatement("SELECT * FROM employees")
+        .
+
+execute()
+        .
+
+flatMap(r ->r.
+
+map((row, metadata) ->{
+Employee emp = new Emloyee();
+            emp.
+
+setId(row.get("emp_id", Integer .class));
+        emp.
+
+setName(row.get("name"),String.class));
+        return emp;
+        }))
+                .
+
+close()
+        .
+
+subscribe();
+```
+
+# 스프링 WebFlux의 코루팅 지원
+
+## 1. 코루틴
+
+- `코루틴(Coroutine)`은 코틀린에서 비동기-논블로킹 프로그래밍을 명령형 스타일로 작성할 수 있도록 도와주는 라이브러리
+- 코루틴은 멀티 플랫폼을 지원하여 코틀린을 사용하는 안드로이드, 서버 등 여러 환경에서 사용할 수 있다.
+- 코루틴은 `일시 중단 가능한 함수(suspend function)`를 통해 스레드가 실행을 잠시 중단했다가 중단한 지점부터 다시 `재개(resume)`할 수 있다.
+- **코루틴을 사용한 구조적 동시성 예시**
+  ```kotlin
+  suspend fun combineApi() = coroutineScope {
+    val response1 = async { getApi1() }
+    val response2 = async { getApi2() }
+  
+    return ApiResult {
+      response1.await()
+      response2.await()
+    }
+  }
+  ```
+
+## 2. 스프링 WebFlux의 코루틴 지원
+
+- 스프링 WebFlux 공식문서의 코틀린 예제들을 보면 모두 코루틴 기반의 예제를 소개하고 있다.
+- 스프링 MVC, 스프링 WebFlux 모두 코루틴을 지원하여 의존성만 추가하면 바로 사용 가능
+- 아래 의존성을 `build.gradle.kts`에 추가하면 코루틴을 사용할 수 있다.
+
+```kotlin
+dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${version}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${version}")
+}
+```
+
+**리액티브가 코루틴으로 변환되는 방식**
+
+```kotlin
+// Mono -> suspend
+fun handler(): Mono<Void> -> suspend fun handler()
+
+// Flux -> Flow
+fun handler(): Flux<T> -> fun handler(): Flow<T>
+```
+
+**코루틴을 적용한 컨트롤러 코드**
+
+```kotlin
+@RestController
+class UserController(
+    private val userService: UserService,
+    private val userDetailService: UserDetailService,
+) {
+    @GetMapping("/{id}")
+    suspend fun get(@PathVariable id: Long): User {
+        return userService.getById(id)
+    }
+
+    @GetMapping("/users")
+    suspend fun gets() = withContext(Despachers.IO) {
+        val usersDeffered = async { userService.gets() }
+        val userDetailsDeffered = async { userDetailService.await() }
+
+        return UserList(usersDeffered.await(), userDetailsDeffered.await())
+    }
+}
+```
+
+**코틀린을 사용한 WebClient**
+
+```kotlin
+val client = WebClient.create("https://example.com")
+
+val result = client.get()
+    .uri("/persons/{id}", id)
+    .retrieve()
+    .awaitBody<Person>()
+```
+
+- 기존 리액티브 코드를 코루틴으로 변환하고 싶다면 `awaitXXX` 시작하는 확장 함수를 사용하면 즉시 코루틴으로 변환할 수 있다.
