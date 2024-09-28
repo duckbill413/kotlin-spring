@@ -1,8 +1,7 @@
 package wh.duckbill.userservice.utils
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.JWT.*
-import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.JWT.create
+import com.auth0.jwt.JWT.require
 import com.auth0.jwt.algorithms.Algorithm.HMAC256
 import com.auth0.jwt.interfaces.DecodedJWT
 import wh.duckbill.userservice.config.JWTProperties

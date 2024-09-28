@@ -12,7 +12,6 @@ import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toMono
 import wh.duckbill.userservice.model.AuthToken
-import java.net.http.HttpHeaders
 
 @Configuration
 class WebConfig(

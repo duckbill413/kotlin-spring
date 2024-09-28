@@ -1,6 +1,5 @@
 package wh.duckbill.userservice.domain.entity
 
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.LastModifiedDate
