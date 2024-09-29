@@ -1,14 +1,21 @@
 package wh.duckbill.issue.config
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.coroutines.runBlocking
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.MethodParameter
+import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.support.WebDataBinderFactory
 import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.method.support.ModelAndViewContainer
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport
+import wh.duckbill.issue.exception.UnAuthorizedException
 
 /**
  * WebMvcConfigurationSupport() 클래스
@@ -46,7 +53,9 @@ class WebConfig(
  * Controller의 메소드 인자로 AuthUser가 있는 경우 생성
  */
 @Component
-class AuthUserHandlerArgResolver : HandlerMethodArgumentResolver {
+class AuthUserHandlerArgResolver(
+    @Value("\${auth.url}") val authUrl: String,
+) : HandlerMethodArgumentResolver {
 
     /**
      * supportsParameter: 해당 메서드는 이 HandlerMethodArgumentResolver 가
@@ -72,17 +81,24 @@ class AuthUserHandlerArgResolver : HandlerMethodArgumentResolver {
         webRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?,
     ): Any? {
-        // TODO: 추후 재정의 예정
-        return AuthUser(
-            userId = 1,
-            username = "테스트",
-        )
+        val authHeader = webRequest.getHeader("Authorization") ?: throw UnAuthorizedException()
+
+        return runBlocking {
+            WebClient.create()
+                .get()
+                .uri(authUrl)
+                .header(HttpHeaders.AUTHORIZATION, authHeader)
+                .retrieve()
+                .awaitBody<AuthUser>()
+        }
     }
 
 }
 
 data class AuthUser(
+    @JsonProperty("id")
     val userId: Long,
     val username: String,
+    val email: String,
     val profileUrl: String? = null,
 )
