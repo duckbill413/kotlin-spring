@@ -21,9 +21,9 @@ data class User(
     val profileUrl: String? = null,
     @Column("created_at")
     @CreatedDate
-    val createdDate: LocalDateTime? = null,
+    val createdAt: LocalDateTime? = null,
     @Column("updated_at")
     @LastModifiedDate
-    val updatedDate: LocalDateTime? = null
+    val updatedAt: LocalDateTime? = null
 ) {
 }

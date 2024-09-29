@@ -1,9 +1,11 @@
 package wh.duckbill.userservice.service
 
+import com.auth0.jwt.interfaces.DecodedJWT
 import org.springframework.stereotype.Service
 import wh.duckbill.userservice.config.JWTProperties
 import wh.duckbill.userservice.domain.entity.User
 import wh.duckbill.userservice.domain.repository.UserRepository
+import wh.duckbill.userservice.exception.InvalidJwtTokenException
 import wh.duckbill.userservice.exception.PasswordNotMatchedException
 import wh.duckbill.userservice.exception.UserExistsException
 import wh.duckbill.userservice.exception.UserNotFoundException
@@ -19,7 +21,7 @@ import java.time.Duration
 class UserService(
     private val userRepository: UserRepository,
     private val jwtProperties: JWTProperties,
-    private val coroutineCacheManager: CoroutineCacheManager<User>,
+    private val cacheManager: CoroutineCacheManager<User>,
 ) {
     companion object {
         private val CACHE_TTL = Duration.ofMinutes(1)
@@ -58,7 +60,7 @@ class UserService(
             val token = JWTUtils.createToken(jwtClaim, jwtProperties)
             // token 을 저장할 필요가 있음
             // 현재는 캐시 메니저를 사용
-            coroutineCacheManager.awaitPut(
+            cacheManager.awaitPut(
                 key = token, value = this, ttl = CACHE_TTL
             )
 
@@ -71,6 +73,21 @@ class UserService(
     }
 
     suspend fun logout(token: String) {
-        coroutineCacheManager.awaitEvict(token)
+        cacheManager.awaitEvict(token)
+    }
+
+    suspend fun getByToken(token: String): User {
+        val cachedUser = cacheManager.awaitGetOrPut(key = token, ttl = CACHE_TTL) {
+            // 캐시가 유효하지 않은 경우 동작
+            val decodedJWT: DecodedJWT = JWTUtils.decode(token, jwtProperties.secret, jwtProperties.issuer)
+
+            val userId: Long = decodedJWT.claims["userId"]?.asLong() ?: throw InvalidJwtTokenException()
+            get(userId)
+        }
+        return cachedUser
+    }
+
+    suspend fun get(userId: Long) : User {
+        return userRepository.findById(userId) ?: throw UserNotFoundException()
     }
 }

@@ -2,10 +2,7 @@ package wh.duckbill.userservice.controller
 
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
-import wh.duckbill.userservice.model.AuthToken
-import wh.duckbill.userservice.model.SignInRequest
-import wh.duckbill.userservice.model.SignInResponse
-import wh.duckbill.userservice.model.SignUpRequest
+import wh.duckbill.userservice.model.*
 import wh.duckbill.userservice.service.UserService
 
 @RestController
@@ -25,4 +22,11 @@ class UserController(
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun logout(@AuthToken token: String) =
         userService.logout(token)
+
+    @GetMapping("/me")
+    suspend fun get(
+        @AuthToken token: String,
+    ): MeResponse {
+        return MeResponse(userService.getByToken(token))
+    }
 }
