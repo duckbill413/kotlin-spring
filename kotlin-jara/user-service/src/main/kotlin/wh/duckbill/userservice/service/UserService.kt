@@ -12,6 +12,7 @@ import wh.duckbill.userservice.exception.UserNotFoundException
 import wh.duckbill.userservice.model.SignInRequest
 import wh.duckbill.userservice.model.SignInResponse
 import wh.duckbill.userservice.model.SignUpRequest
+import wh.duckbill.userservice.model.UserEditRequest
 import wh.duckbill.userservice.utils.BCryptUtils
 import wh.duckbill.userservice.utils.JWTClaim
 import wh.duckbill.userservice.utils.JWTUtils
@@ -89,5 +90,22 @@ class UserService(
 
     suspend fun get(userId: Long) : User {
         return userRepository.findById(userId) ?: throw UserNotFoundException()
+    }
+
+    suspend fun edit(token: String, request: UserEditRequest, profileUrl: String?): User {
+        val user = getByToken(token)
+
+        val newUser = user.copy(
+            username = request.username,
+            profileUrl = profileUrl ?: user.profileUrl,
+        )
+
+        return userRepository.save(newUser).also {
+            cacheManager.awaitPut(
+                key = token,
+                value = newUser,
+                ttl = CACHE_TTL
+            )
+        }
     }
 }
