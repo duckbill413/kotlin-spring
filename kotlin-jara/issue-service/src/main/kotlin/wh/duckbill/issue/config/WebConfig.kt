@@ -7,6 +7,7 @@ import org.springframework.web.bind.support.WebDataBinderFactory
 import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.method.support.ModelAndViewContainer
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport
 
 /**
@@ -16,7 +17,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupp
  */
 @Configuration
 class WebConfig(
-    private val authUserHandlerArgResolver: AuthUserHandlerArgResolver
+    private val authUserHandlerArgResolver: AuthUserHandlerArgResolver,
 ) : WebMvcConfigurationSupport() {
 
     // 주입 받은 authUserHandlerArgResolver 를 HandlerMethodArgResolver 리스트에 추가
@@ -25,6 +26,16 @@ class WebConfig(
         argumentResolvers.apply {
             add(authUserHandlerArgResolver) // AuthUser 를 받는 Controller 에 전달
         }
+    }
+
+    override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
+        registry.addResourceHandler("/**")
+            .addResourceLocations(
+                "classpath:/META-INF/resources/",
+                "classpath:/resources/",
+                "classpath:/static/",
+                "classpath:/public/"
+            )
     }
 }
 
@@ -59,7 +70,7 @@ class AuthUserHandlerArgResolver : HandlerMethodArgumentResolver {
         parameter: MethodParameter,
         mavContainer: ModelAndViewContainer?,
         webRequest: NativeWebRequest,
-        binderFactory: WebDataBinderFactory?
+        binderFactory: WebDataBinderFactory?,
     ): Any? {
         // TODO: 추후 재정의 예정
         return AuthUser(
@@ -73,5 +84,5 @@ class AuthUserHandlerArgResolver : HandlerMethodArgumentResolver {
 data class AuthUser(
     val userId: Long,
     val username: String,
-    val profileUrl: String? = null
+    val profileUrl: String? = null,
 )
