@@ -1,11 +1,9 @@
 package org.coroutine.동시성.BASE_2
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.runInterruptible
 import kotlin.system.measureTimeMillis
 
 suspend fun one() : Int {
