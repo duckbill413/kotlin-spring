@@ -12,13 +12,14 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
   // flow 빌더를 사용하여 Flow를 생성합니다.
   // emit()으로 값을 방출하고 delay()로 시간 간격을 둡니다.
-  flow {
+  val sampleFlow = flow {
     emit(1)    // 첫 번째 값 방출
     delay(300) // 300ms 대기
     emit(2)    // 두 번째 값 방출  
     delay(500) // 500ms 대기
     emit(3)    // 세 번째 값 방출
   }
+  sampleFlow.collect { println(it) }
 
   /**
    * 1. publisher : 데이터 생성자
