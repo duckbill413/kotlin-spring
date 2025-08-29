@@ -2,10 +2,8 @@ package org.coroutine.Flow.BASE_5
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -88,6 +86,98 @@ class ChatService {
         type = Message.SYSTEM,
       )
       roomMessages[roomId]?.emit(systemMessage)
+    }
+  }
+
+  fun userConnect(userId: String, username: String): Flow<UserStatus> {
+    val userState = userStatus.getOrPut(userId) {
+      MutableStateFlow(UserStatus(userId, username, isOnline = true))
+    }
+
+    CoroutineScope(Dispatchers.Default).launch {
+      userState.update { it.copy(isOnline = true, lastSeen = LocalDateTime.now()) }
+      _activeUserCount.update { it + 1 }
+    }
+
+    return userState
+  }
+
+  fun userDisconnect(userId: String) {
+    val userStatus = userStatus[userId] ?: return
+
+    CoroutineScope(Dispatchers.Default).launch {
+      userStatus.value.currentRoomId?.let { roomId ->
+        leaveRoom(userId, userStatus.value.username, roomId)
+      }
+      userStatus.update { it.copy(currentRoomId = null, lastSeen = LocalDateTime.now(), isOnline = false) }
+      _activeUserCount.update { it - 1 }
+    }
+  }
+
+  fun leaveRoom(userId: String, username: String, roomId: String) {
+    val roomState = roomStatus[roomId] ?: return
+    val messageFlow = roomMessages[roomId] ?: return
+
+    CoroutineScope(Dispatchers.Default).launch {
+      roomState.update {
+        it.copy(
+          participants = it.participants - userId,
+        )
+      }
+      val leaveMessage = ChatMessage(
+        sender = username,
+        content = "$username 님이 퇴장하셨습니다.",
+        roomId = roomId,
+        type = Message.LEAVE,
+      )
+      messageFlow.emit(leaveMessage)
+      _serverEvents.emit(ServerEvent.UserLeft(userId, username, roomId))
+    }
+  }
+
+  fun joinRoom(userId: String, username: String, roomId: String): Flow<ChatMessage>? {
+    val roomState = roomStatus[roomId] ?: return null
+    val messageFlow = roomMessages[roomId] ?: return null
+    val userStatus = userStatus[userId] ?: return null
+
+    CoroutineScope(Dispatchers.Default).launch {
+      userStatus.value.currentRoomId?.let {
+        if (it != roomId) {
+          leaveRoom(userId, username, it)
+        } else {
+          return@launch
+        }
+      }
+      userStatus.update { it.copy(currentRoomId = roomId) }
+      roomState.update { it.copy(participants = it.participants + userId) }
+      val joinMessage = ChatMessage(
+        sender = username,
+        content = "$username 님이 입장하셨습니다.",
+        roomId = roomId,
+        type = Message.JOIN,
+      )
+      messageFlow.emit(joinMessage)
+      _serverEvents.emit(ServerEvent.UserJoined(userId, username, roomId))
+    }
+
+    return messageFlow
+  }
+
+  suspend fun sendMessage(message: ChatMessage) {
+    val messageFlow = roomMessages[message.roomId] ?: return
+    val roomState = roomStatus[message.roomId] ?: return
+
+    roomState.update { it.copy(messageCount = it.messageCount + 1) }
+    messageFlow.emit(message)
+    _serverEvents.emit(ServerEvent.MessageReceived(message))
+  }
+
+  fun getRoomState(roomId: String): StateFlow<ChatRoomStatus>? = roomStatus[roomId]
+  fun getAllRooms(): Flow<List<ChatRoomStatus>> = flow {
+    while (true) {
+      val rooms = roomStatus.values.map { it.value }
+      emit(rooms)
+      delay(1000L)
     }
   }
 }
