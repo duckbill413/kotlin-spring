@@ -1,11 +1,9 @@
 package org.coroutine.Flow.BASE_5
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentHashMap
 
 fun generateMessageId(): String = "msg-${(1..8).map { ('a'..'z') + ('0'..'9') }.map { it.random() }.joinToString("")}}"
@@ -179,5 +177,74 @@ class ChatService {
       emit(rooms)
       delay(1000L)
     }
+  }
+}
+
+class ChatClient(
+  private val service: ChatService,
+  val userId: String,
+  val username: String,
+) {
+  private val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+  private val currentRoomId: String? = null
+  private var messageCollectJob: Job? = null
+
+  suspend fun start() {
+    val userStatus = service.userConnect(
+      userId = userId,
+      username = username,
+    )
+
+    CoroutineScope(Dispatchers.Default).launch {
+      userStatus.collect { status ->
+        println("상태 업데이트 $username (${if (status.isOnline) "online " else "offline"})")
+      }
+    }
+  }
+
+  suspend fun joinRoom(roomId: String) {
+    messageCollectJob?.cancel()
+    println("$username 님이 $roomId 방에 입장하였습니다.")
+    val messageFlow = service.joinRoom(userId, username, roomId)
+    if (messageFlow == null) {
+      println("방을 찾을 수 없습니다. $roomId")
+      return
+    }
+    messageCollectJob = CoroutineScope(Dispatchers.Default).launch {
+      messageFlow.collect { message ->
+        val time = message.timestamp.format(formatter)
+        val sender = if (message.type == Message.SYSTEM) "" else message.sender
+        println("[$time] $sender: ${message.content}")
+      }
+    }
+
+    service.getRoomState(roomId)?.let { roomState ->
+      CoroutineScope(Dispatchers.Default).launch {
+        roomState.collect { state ->
+          println("(${state.participants.size}) 참가 중")
+        }
+      }
+    }
+  }
+
+  suspend fun sendMessage(content: String) {
+    val roomId = currentRoomId
+    if (roomId == null) {
+      println("채팅방에 먼저 입장 필수!")
+      return
+    }
+
+    val message = ChatMessage(
+      sender = username,
+      content = content,
+      roomId = roomId,
+    )
+    service.sendMessage(message)
+  }
+
+  fun disconnect() {
+    println("$username 연결 종료")
+    service.userDisconnect(userId)
+    messageCollectJob?.cancel()
   }
 }
