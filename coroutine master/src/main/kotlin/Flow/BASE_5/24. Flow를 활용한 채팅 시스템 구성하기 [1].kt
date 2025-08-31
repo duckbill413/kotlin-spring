@@ -64,7 +64,7 @@ class ChatService {
 
   init {
     createRoom(roomId = "general", name = "General Chat Room")
-    createRoom(roomId = "sales", name = "Sales Chat Room")
+    createRoom(roomId = "tech", name = "Tech Chat Room")
   }
 
   fun createRoom(roomId: String, name: String) {
@@ -247,4 +247,83 @@ class ChatClient(
     service.userDisconnect(userId)
     messageCollectJob?.cancel()
   }
+}
+
+fun main() = runBlocking {
+  val chatService = ChatService()
+
+  launch {
+    println("서버 이벤트 모니터링 시작")
+    chatService.serverEvents.collect { event ->
+      when (event) {
+        is ServerEvent.MessageReceived -> println("메시지 수신 이벤트")
+        is ServerEvent.RoomCreated -> println("방 생성 이벤트")
+        is ServerEvent.UserJoined -> println("유저 참여 이벤트")
+        is ServerEvent.UserLeft -> println("유저 나감 이벤트")
+      }
+    }
+  }
+
+  launch {
+    chatService.activeUserCount.collect { count ->
+      println("활성 사용자 수 $count")
+    }
+  }
+
+  // 클라이언트 생성
+  val alice = ChatClient(chatService, "user-1", "Alice")
+  val bob = ChatClient(chatService, "user-2", "Bob")
+  val charlie = ChatClient(chatService, "user-3", "Charlie")
+
+  // 클라이언트 시작
+  alice.start()
+  bob.start()
+  charlie.start()
+
+  // Alice와 Bob은 general 방에 입장
+  alice.joinRoom("general")
+  delay(500)
+  bob.joinRoom("general")
+  delay(500)
+
+  // 메시지 교환
+  alice.sendMessage("안녕하세요! 모두 잘 지내시나요?")
+  delay(800)
+  bob.sendMessage("네, 잘 지내요. 오늘 좋은 하루 보내세요!")
+  delay(1000)
+
+  // Charlie는 tech 방에 입장
+  charlie.joinRoom("tech")
+  delay(500)
+  charlie.sendMessage("기술 토론방에 오신 것을 환영합니다!")
+  delay(800)
+
+  // Bob이 tech 방으로 이동
+  bob.joinRoom("tech")
+  delay(500)
+  bob.sendMessage("안녕하세요 Charlie, 여기서 뵙네요!")
+  delay(800)
+  charlie.sendMessage("안녕하세요 Bob, 어서오세요!")
+  delay(1000)
+
+  // Alice가 tech 방으로 이동
+  alice.joinRoom("tech")
+  delay(500)
+  alice.sendMessage("저도 기술 토론에 참여할게요!")
+  delay(1500)
+
+  // 새 채팅방 생성 및 이동
+  chatService.createRoom("random", "Random Chat")
+  delay(500)
+  bob.joinRoom("random")
+  delay(500)
+  bob.sendMessage("새로운 방이네요! 누가 있나요?")
+  delay(1000)
+
+  // 사용자 연결 종료
+  bob.disconnect()
+  delay(800)
+  charlie.disconnect()
+  delay(800)
+  alice.disconnect()
 }
