@@ -36,26 +36,78 @@ data class ChatRoomStatus(
   val messageCount: Int = 0,
 )
 
+
+/**
+ * 채팅 서버에서 발생하는 모든 이벤트들을 나타내는 sealed class
+ * 이벤트들은 채팅 시스템의 상태 변화를 추적하고 모니터링하는데 사용됨
+ *
+ */
 sealed class ServerEvent {
+  /**
+   * 새로운 채팅 메시지가 수신되었을 때 발생하는 이벤트
+   * @property message 수신된 채팅 메시지 정보
+   */
   data class MessageReceived(val message: ChatMessage) : ServerEvent()
+
+  /**
+   * 사용자가 채팅방에 입장했을 때 발생하는 이벤트
+   * @property userId 입장한 사용자의 고유 ID
+   * @property username 입장한 사용자의 이름
+   * @property roomId 입장한 채팅방의 ID
+   */
   data class UserJoined(val userId: String, val username: String, val roomId: String) : ServerEvent()
+
+  /**
+   * 사용자가 채팅방을 나갔을 때 발생하는 이벤트
+   * @property userId 퇴장한 사용자의 고유 ID
+   * @property username 퇴장한 사용자의 이름
+   * @property roomId 퇴장한 채팅방의 ID
+   */
   data class UserLeft(val userId: String, val username: String, val roomId: String) : ServerEvent()
+
+  /**
+   * 새로운 채팅방이 생성되었을 때 발생하는 이벤트
+   * @property roomId 생성된 채팅방의 ID
+   * @property name 생성된 채팅방의 이름
+   */
   data class RoomCreated(val roomId: String, val name: String) : ServerEvent()
 }
 
 class ChatService {
+  /**
+   * MutableSharedFlow
+   * - 초기값 불필요
+   * - 모든 값을 발행 (중복 허용)
+   * 캐시 크기 설정 가능 (replay)
+   * 버퍼 크기 설정 가능
+   * `emit()` 으로 값 발행
+   */
   // 각 채팅방별로 메시지 스트림 (roomId -> SharedFlow<ChatMessage>)
   private val roomMessages = ConcurrentHashMap<String, MutableSharedFlow<ChatMessage>>()
 
+  /**
+   * `private` 로 선언하여 클래스 내부에서만 접근 가능
+   * `MutableSharedFlow` 로 선언되어 값을 emit 할 수 있음
+   */
   private val _serverEvents = MutableSharedFlow<ServerEvent>(
-    replay = 100,
-    extraBufferCapacity = 1000,
+    replay = 100, // 새로운 수신자에게 재생할 이전 값의 수
+    extraBufferCapacity = 1000, // 추가 버퍼 용량
   )
+
+  // 값을 변경할 수는 없고 관찰만 가능
   val serverEvents: SharedFlow<ServerEvent> = _serverEvents
 
   // 채팅방 상태 관리 스트림 (roomId -> StateFlow<ChatRoomStatus>)
   private val roomStatus = ConcurrentHashMap<String, MutableStateFlow<ChatRoomStatus>>()
 
+  /**
+   * MutableStateFlow
+   * - 반드시 초가값 필요
+   * - 항상 값을 하나 유지
+   * - 동일한 값은 발행하지 않음 (중복 방지)
+   * - 마지막 값만 캐시 (replay=1)
+   * - value 프로퍼티로 접근 가능
+   */
   // 사용자 상태 관리 (userId -> StateFlow<UserStatus>)
   private val userStatus = ConcurrentHashMap<String, MutableStateFlow<UserStatus>>()
 
@@ -75,6 +127,10 @@ class ChatService {
     roomMessages[roomId] = MutableSharedFlow(replay = 50, extraBufferCapacity = 100)
     roomStatus[roomId] = MutableStateFlow(ChatRoomStatus(roomId, name, emptySet()))
 
+    // Dispatchers.Default 를 사용하여 CPU 집약적인 작업에 최적화된 스레드 풀에서 실행
+    // - 채팅방 생성 이벤트 발행
+    // - 시스템 메시지 생성 및 발행
+    // - 비동기로 처리되어 메인 스레드 차단하지 않음
     CoroutineScope(Dispatchers.Default).launch {
       _serverEvents.emit(ServerEvent.RoomCreated(roomId, name))
       val systemMessage = ChatMessage(
