@@ -14,7 +14,7 @@ private const val key = "google"
 class GoogleAuthService(
   private val config: OAuth2Config
 ) : OAuthServiceInterface {
-  private val oAuthInfo = config.providers[key] ?: throw CustomException(ErrorCode.AUTH_CONFIG_NOT_FOUND)
+  private val oAuthInfo = config.providers[key] ?: throw CustomException(ErrorCode.AUTH_CONFIG_NOT_FOUND, key)
 
   override val providerName: String = key
 

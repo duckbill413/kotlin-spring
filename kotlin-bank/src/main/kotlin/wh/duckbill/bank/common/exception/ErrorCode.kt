@@ -8,8 +8,9 @@ interface CodeInterface {
 enum class ErrorCode(
   override val code: Int,
   override var message: String
-) : CodeInterface{
+) : CodeInterface {
   AUTH_CONFIG_NOT_FOUND(-100, "auth config not found"),
-
+  FAILED_TO_CALL_CLIENT(-101, "Failed to call client"),
+  CALL_RESULT_BODY_NILL(-102, "body is null"),
 }
 

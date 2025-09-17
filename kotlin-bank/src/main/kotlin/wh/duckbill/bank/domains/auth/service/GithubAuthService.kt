@@ -1,6 +1,9 @@
 package wh.duckbill.bank.domains.auth.service
 
+import org.apache.naming.ResourceRef.AUTH
 import org.springframework.stereotype.Service
+import wh.duckbill.bank.common.exception.CustomException
+import wh.duckbill.bank.common.exception.ErrorCode
 import wh.duckbill.bank.config.OAuth2Config
 import wh.duckbill.bank.interfaces.OAuth2TokenResponse
 import wh.duckbill.bank.interfaces.OAuth2UserResponse
@@ -12,7 +15,7 @@ private const val key = "github"
 class GithubAuthService(
   private val config: OAuth2Config
 ) : OAuthServiceInterface {
-  private val oAuthInfo = config.providers[key] ?: throw TODO("Custom exception")
+  private val oAuthInfo = config.providers[key] ?: throw CustomException(ErrorCode.AUTH_CONFIG_NOT_FOUND, key)
 
   override val providerName: String = key
 
