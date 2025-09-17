@@ -19,6 +19,16 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.springframework.boot:spring-boot-starter")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+  // mysql
+  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+  implementation("mysql:mysql-connector-java:8.0.33")
+  implementation("org.jetbrains.kotlin:kotlin-reflect")
+  implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+
+  // mongo
+  implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+
   testImplementation(kotlin("test"))
 }
 
