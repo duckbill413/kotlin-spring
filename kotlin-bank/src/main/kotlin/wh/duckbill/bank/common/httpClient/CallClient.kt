@@ -35,7 +35,7 @@ class CallClient(
         throw CustomException(ErrorCode.FAILED_TO_CALL_CLIENT, msg)
       }
 
-      return it.body?.string() ?: throw CustomException(ErrorCode.CALL_RESULT_BODY_NILL)
+      return it.body?.string() ?: throw CustomException(ErrorCode.CALL_RESULT_BODY_NULL)
     }
   }
 }
