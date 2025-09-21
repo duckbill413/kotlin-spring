@@ -6,6 +6,7 @@ import wh.duckbill.bank.common.exception.CustomException
 import wh.duckbill.bank.common.exception.ErrorCode
 import wh.duckbill.bank.common.jwt.JwtProvider
 import wh.duckbill.bank.common.logging.Logging
+import wh.duckbill.bank.common.transaction.Transactional
 import wh.duckbill.bank.interfaces.OAuthServiceInterface
 
 @Service
@@ -13,6 +14,7 @@ class AuthService(
   private val oAuthServices: Map<String, OAuthServiceInterface>,
   private val jwtProvider: JwtProvider,
   private val logger: Logger = Logging.getLogger(AuthService::class.java),
+  private val transactional: Transactional
 ) {
 
   fun handleAuth(state: String, code: String): String? = Logging.logFor(logger) { log ->
@@ -30,6 +32,10 @@ class AuthService(
       name = userInfo.name,
       id = userInfo.id
     )
+
+    transactional.run {
+      
+    }
     // userInfo
     return@logFor null
   }
