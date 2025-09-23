@@ -34,6 +34,9 @@ dependencies {
   // jwt
   implementation("com.auth0:java-jwt:3.12.0")
 
+  // uuid
+  implementation("com.github.f4b6a3:ulid-creator:5.2.3")
+
   testImplementation(kotlin("test"))
 }
 
