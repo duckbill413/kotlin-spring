@@ -31,6 +31,9 @@ dependencies {
   // client
   implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
+  // jwt
+  implementation("com.auth0:java-jwt:3.12.0")
+
   testImplementation(kotlin("test"))
 }
 
