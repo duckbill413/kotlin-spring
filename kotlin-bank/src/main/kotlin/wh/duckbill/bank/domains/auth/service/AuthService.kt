@@ -52,4 +52,8 @@ class AuthService(
     // userInfo
     return@logFor null
   }
+
+  fun verifyToken(token: String) {
+    jwtProvider.verify(token.removePrefix("Bearer "))
+  }
 }
