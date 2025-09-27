@@ -50,7 +50,7 @@ class AuthService(
       }
     }
     // userInfo
-    return@logFor null
+    return@logFor token
   }
 
   fun verifyToken(token: String) {

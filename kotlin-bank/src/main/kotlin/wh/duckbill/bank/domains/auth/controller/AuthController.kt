@@ -25,7 +25,7 @@ class AuthController(
     response.addCookie(
       Cookie("authToken", token).apply {
         isHttpOnly = true
-        path = "/callback"
+        path = "/"
         maxAge = 60 * 60 * 24
       }
     )

@@ -4,6 +4,7 @@ plugins {
   kotlin("plugin.spring") version "1.8.0"
   id("io.spring.dependency-management") version "1.0.15.RELEASE"
   kotlin("plugin.serialization") version "1.8.0"
+  kotlin("plugin.jpa") version "1.9.22"
 }
 
 group = "wh.duckbill"
