@@ -17,7 +17,7 @@ import java.util.*
 class JwtProvider(
   @Value("\${jwt.secret-key}")
   private val secretKey: String,
-  @Value("\${jwt.time")
+  @Value("\${jwt.time}")
   private val time: Long,
 ) {
 

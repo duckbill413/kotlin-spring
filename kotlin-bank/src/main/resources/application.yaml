@@ -1,7 +1,0 @@
-spring:
-  datasource:
-    name:
-
-jwt:
-  secret-key:
-  time:
