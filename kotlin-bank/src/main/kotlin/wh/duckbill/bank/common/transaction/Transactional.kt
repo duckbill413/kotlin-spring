@@ -13,7 +13,7 @@ class Transactional(
   private val advice: Runner
 ) {
 
-  fun <T> run(function: () -> T?): T? = advice.run(function)
+  fun <T> run(function: () -> T?) = advice.run(function)
 
   fun <T> readOnly(function: () -> T?): T? = advice.readOnly(function)
 
