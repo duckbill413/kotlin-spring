@@ -1,6 +1,5 @@
 package wh.duckbill.bank.domains.bank.controller
 
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import wh.duckbill.bank.domains.bank.service.BankService
 import wh.duckbill.bank.types.dto.Response
@@ -13,7 +12,7 @@ class BankController(
 ) {
 
   @PostMapping("/create/{ulid}")
-  fun createAccount(@PathVariable ulid: String): ResponseEntity<Response<String>> {
+  fun createAccount(@PathVariable ulid: String): Response<String> {
     return bankService.createAccount(ulid)
   }
 
@@ -26,7 +25,7 @@ class BankController(
   }
 
   @PostMapping("/remove/{userUlid}/{accountUlid}")
-  fun balance(
+  fun removeAccount(
     @PathVariable userUlid: String,
     @PathVariable accountUlid: String
   ): Response<String> {
