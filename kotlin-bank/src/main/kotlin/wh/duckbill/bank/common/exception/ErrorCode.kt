@@ -21,5 +21,6 @@ enum class ErrorCode(
   FAILED_TO_FIND_ACCOUNT(-108, "failed to find account"),
   MISS_MATCH_ACCOUNT_ULID_AND_USER_ULID(-109, "miss match account ulid and user ulid"),
   ACCOUNT_BALANCE_IS_NOT_ZERO(-110, "account balance is not zero"),
+  FAILED_TO_MUTEX_INVOKE(-111, "failed to mutex invoke"),
   ;
 }
