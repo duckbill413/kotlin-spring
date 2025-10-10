@@ -9,6 +9,7 @@ import wh.duckbill.bank.common.exception.ErrorCode
 import wh.duckbill.bank.common.logging.Logging
 import wh.duckbill.bank.common.transaction.Transactional
 import wh.duckbill.bank.domains.transactions.model.DepositResponse
+import wh.duckbill.bank.domains.transactions.model.TransferResponse
 import wh.duckbill.bank.domains.transactions.repository.TransactionsAccount
 import wh.duckbill.bank.domains.transactions.repository.TransactionsUser
 import wh.duckbill.bank.types.dto.Response
@@ -42,6 +43,44 @@ class TransactionService(
           account.updatedAt = LocalDateTime.now()
           transactionsAccount.save(account)
           ResponseProvider.success(DepositResponse(account.balance))
+        }
+      }
+    }
+
+  fun transfer(
+    fromUlid: String,
+    fromAccountId: String,
+    toAccountId: String,
+    value: BigDecimal
+  ): Response<TransferResponse> =
+    Logging.logFor(logger) { log ->
+      log["fromUlid"] = fromUlid
+      log["fromAccountId"] = fromAccountId
+      log["toAccountId"] = toAccountId
+      log["value"] = value
+
+      val key = RedisKeyProvider.bankMutexKey(fromUlid, fromAccountId)
+      redisClient.invokeWithMutex(key) {
+        transactional.run {
+          val fromUser = transactionsUser.findByUlid(fromUlid)
+          val fromAccount = transactionsAccount.findByUlidAndUser(fromAccountId, fromUser)
+            ?: throw CustomException(ErrorCode.FAILED_TO_FIND_ACCOUNT)
+
+          val toAccount =
+            transactionsAccount.findByUlid(toAccountId) ?: throw CustomException(ErrorCode.FAILED_TO_FIND_ACCOUNT)
+
+          if (fromAccount.balance < value) {
+            throw CustomException(ErrorCode.ENOUGH_VALUE)
+          } else if (value <= BigDecimal.ZERO) {
+            throw CustomException(ErrorCode.VALUE_MUST_NOT_BE_UNDER_ZERO)
+          }
+
+          fromAccount.balance = fromAccount.balance.subtract(value)
+          toAccount.balance = toAccount.balance.add(value)
+          fromAccount.updatedAt = LocalDateTime.now()
+          transactionsAccount.save(fromAccount)
+          transactionsAccount.save(toAccount)
+          ResponseProvider.success(TransferResponse(fromAccount.balance, toAccount.balance))
         }
       }
     }
