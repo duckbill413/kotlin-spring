@@ -6,7 +6,6 @@ import wh.duckbill.bank.common.exception.CustomException
 import wh.duckbill.bank.common.exception.ErrorCode
 
 object Logging {
-
   fun <T : Any> getLogger(clazz: Class<T>): Logger = LoggerFactory.getLogger(clazz)
 
   fun <T> logFor(log: Logger, function: (MutableMap<String, Any>) -> T?): T {
