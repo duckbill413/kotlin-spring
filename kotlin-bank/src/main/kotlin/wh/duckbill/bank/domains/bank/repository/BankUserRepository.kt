@@ -4,4 +4,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 import wh.duckbill.bank.types.entity.User
 
 interface BankUserRepository : JpaRepository<User, String> {
+  fun findByUlid(userUlid: String): User
 }
