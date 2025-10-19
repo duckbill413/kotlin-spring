@@ -7,6 +7,7 @@ import wh.duckbill.bank.common.cache.RedisKeyProvider
 import wh.duckbill.bank.common.exception.CustomException
 import wh.duckbill.bank.common.exception.ErrorCode
 import wh.duckbill.bank.common.logging.Logging
+import wh.duckbill.bank.common.message.KafkaProducer
 import wh.duckbill.bank.common.transaction.Transactional
 import wh.duckbill.bank.domains.transactions.model.DepositResponse
 import wh.duckbill.bank.domains.transactions.model.TransferResponse
@@ -21,6 +22,7 @@ import java.time.LocalDateTime
 class TransactionService(
   private val transactionsUser: TransactionsUser,
   private val transactionsAccount: TransactionsAccount,
+  private val kafkaProducer: KafkaProducer,
   private val redisClient: RedisClient,
   private val transactional: Transactional,
   private val logger: Logger = Logging.getLogger(TransactionService::class.java)
@@ -42,6 +44,9 @@ class TransactionService(
           account.balance = account.balance.add(value)
           account.updatedAt = LocalDateTime.now()
           transactionsAccount.save(account)
+
+          kafkaProducer.sendMessage()
+
           ResponseProvider.success(DepositResponse(account.balance))
         }
       }
