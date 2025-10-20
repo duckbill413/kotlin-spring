@@ -6,6 +6,7 @@ import wh.duckbill.bank.common.cache.RedisClient
 import wh.duckbill.bank.common.cache.RedisKeyProvider
 import wh.duckbill.bank.common.exception.CustomException
 import wh.duckbill.bank.common.exception.ErrorCode
+import wh.duckbill.bank.common.json.JsonUtil
 import wh.duckbill.bank.common.logging.Logging
 import wh.duckbill.bank.common.message.KafkaProducer
 import wh.duckbill.bank.common.transaction.Transactional
@@ -13,6 +14,7 @@ import wh.duckbill.bank.domains.transactions.model.DepositResponse
 import wh.duckbill.bank.domains.transactions.model.TransferResponse
 import wh.duckbill.bank.domains.transactions.repository.TransactionsAccount
 import wh.duckbill.bank.domains.transactions.repository.TransactionsUser
+import wh.duckbill.bank.types.TransactionMessage
 import wh.duckbill.bank.types.dto.Response
 import wh.duckbill.bank.types.dto.ResponseProvider
 import java.math.BigDecimal
@@ -45,7 +47,19 @@ class TransactionService(
           account.updatedAt = LocalDateTime.now()
           transactionsAccount.save(account)
 
-          kafkaProducer.sendMessage()
+          val message = JsonUtil.encodeToJson(
+            TransactionMessage(
+              fromUlid = "0x0",
+              fromName = "0x0",
+              fromAccountId = "0x0",
+              toUlid = userUlid,
+              toName = user.username,
+              toAccountId = accountUlid,
+              value = value,
+            ),
+            TransactionMessage.serializer()
+          )
+          kafkaProducer.sendMessage("", message)
 
           ResponseProvider.success(DepositResponse(account.balance))
         }
