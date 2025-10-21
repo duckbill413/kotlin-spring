@@ -1,4 +1,4 @@
-package wh.duckbill.bank.types
+package wh.duckbill.bank.types.message
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

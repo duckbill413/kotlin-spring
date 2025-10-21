@@ -8,6 +8,12 @@ import wh.duckbill.bank.common.exception.ErrorCode
 import wh.duckbill.bank.common.logging.Logging
 import java.time.LocalDateTime
 
+enum class Topics(
+  val topic: String,
+) {
+  Transactions("transactions"),
+}
+
 @Component
 class KafkaProducer(
   private val kafkaTemplate: KafkaTemplate<String, Any>,

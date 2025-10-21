@@ -9,14 +9,15 @@ import wh.duckbill.bank.common.exception.ErrorCode
 import wh.duckbill.bank.common.json.JsonUtil
 import wh.duckbill.bank.common.logging.Logging
 import wh.duckbill.bank.common.message.KafkaProducer
+import wh.duckbill.bank.common.message.Topics
 import wh.duckbill.bank.common.transaction.Transactional
 import wh.duckbill.bank.domains.transactions.model.DepositResponse
 import wh.duckbill.bank.domains.transactions.model.TransferResponse
 import wh.duckbill.bank.domains.transactions.repository.TransactionsAccount
 import wh.duckbill.bank.domains.transactions.repository.TransactionsUser
-import wh.duckbill.bank.types.TransactionMessage
 import wh.duckbill.bank.types.dto.Response
 import wh.duckbill.bank.types.dto.ResponseProvider
+import wh.duckbill.bank.types.message.TransactionMessage
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -59,7 +60,7 @@ class TransactionService(
             ),
             TransactionMessage.serializer()
           )
-          kafkaProducer.sendMessage("", message)
+          kafkaProducer.sendMessage(Topics.Transactions.topic, message)
 
           ResponseProvider.success(DepositResponse(account.balance))
         }
@@ -99,6 +100,20 @@ class TransactionService(
           fromAccount.updatedAt = LocalDateTime.now()
           transactionsAccount.save(fromAccount)
           transactionsAccount.save(toAccount)
+
+          val message = JsonUtil.encodeToJson(
+            TransactionMessage(
+              fromUlid = fromUlid,
+              fromName = fromUser.username,
+              fromAccountId = fromAccountId,
+              toUlid = toAccountId,
+              toName = toAccount.user.username,
+              toAccountId = toAccountId,
+              value = value,
+            ), TransactionMessage.serializer()
+          )
+          kafkaProducer.sendMessage(Topics.Transactions.topic, message)
+
           ResponseProvider.success(TransferResponse(fromAccount.balance, toAccount.balance))
         }
       }
