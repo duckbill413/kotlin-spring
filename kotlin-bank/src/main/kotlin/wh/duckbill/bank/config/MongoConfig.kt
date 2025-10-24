@@ -42,6 +42,6 @@ class MongoConfig(
       }
     }
 
-    return mapper;
+    return mapper
   }
 }
