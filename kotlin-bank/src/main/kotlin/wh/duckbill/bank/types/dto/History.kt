@@ -22,11 +22,11 @@ data class History(
   val time: LocalDateTime,
 )
 
-fun TransactionHistoryDocument.toHistory(): History = History(
+fun TransactionHistoryDocument.toHistory(fromUser: String, toUser: String): History = History(
   fromUlid = fromUlid,
-  fromUser = fromUlid,
+  fromUser = fromUser,
   toUlid = toUlid,
-  toUser = toUlid,
+  toUser = toUser,
   value = value,
   time = time,
 )
