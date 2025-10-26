@@ -52,6 +52,6 @@ class HistoryMongoRepository(
     return value
   }
 
-  private fun getTemplate(c: MongoTableCollector): MongoTemplate =
-    mongoTemplate[c.table] ?: throw CustomException(ErrorCode.FAILED_TO_FIND_MONGO_TEMPLATE)
+  private fun getTemplate(collector: MongoTableCollector): MongoTemplate =
+    mongoTemplate[collector.table] ?: throw CustomException(ErrorCode.FAILED_TO_FIND_MONGO_TEMPLATE)
 }
