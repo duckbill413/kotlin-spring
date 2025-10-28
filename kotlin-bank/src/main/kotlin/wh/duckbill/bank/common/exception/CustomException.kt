@@ -1,14 +1,20 @@
 package wh.duckbill.bank.common.exception
 
-import java.lang.RuntimeException
-
 class CustomException(
-  private val errorCode: CodeInterface,
+  private val codeInterface: CodeInterface,
   private val additionalMessage: String? = null
-): RuntimeException(if (additionalMessage == null) {
-  errorCode.message
-} else {
-  "${errorCode.message} - $additionalMessage"
-}) {
+) : RuntimeException(
+  if (additionalMessage == null) {
+    codeInterface.message
+  } else {
+    "${codeInterface.message} - $additionalMessage"
+  }
+) {
 
+  fun getCodeInterface(): CodeInterface {
+    if (additionalMessage != null) {
+      codeInterface.message += additionalMessage
+    }
+    return codeInterface
+  }
 }

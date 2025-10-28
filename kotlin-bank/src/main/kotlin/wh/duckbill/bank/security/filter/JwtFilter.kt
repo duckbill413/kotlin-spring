@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.util.PathMatcher
 import org.springframework.web.filter.OncePerRequestFilter
+import wh.duckbill.bank.common.exception.CustomException
 import wh.duckbill.bank.common.exception.ErrorCode
 import wh.duckbill.bank.common.jwt.JwtProvider
 import wh.duckbill.bank.types.dto.ResponseProvider
@@ -31,19 +32,40 @@ class JwtFilter(
     val requestUri = request.requestURI
 
     if (shouldPerformAuthentication(requestUri)) {
+      val authHeader = request.getHeader("Authorization")
+      if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        val token = authHeader.substring(7)
+        try {
+          jwtProvider.verify(token)
+        } catch (e: CustomException) {
+          response.status = HttpServletResponse.SC_UNAUTHORIZED
+          response.contentType = "application/json"
+          val msg = e.getCodeInterface()
 
-    } else {
-      response.status = HttpServletResponse.SC_UNAUTHORIZED
-      response.contentType = "application/json"
+          val errorResponse = ResponseProvider.failed(
+            HttpStatus.UNAUTHORIZED,
+            msg.message,
+            null
+          )
+          response.writer.write(ObjectMapper().writeValueAsString(errorResponse))
+          response.writer.flush()
+          return
+        }
+      } else {
+        response.status = HttpServletResponse.SC_UNAUTHORIZED
+        response.contentType = "application/json"
 
-      val errResponse = ResponseProvider.failed(
-        HttpStatus.UNAUTHORIZED,
-        ErrorCode.ACCESS_TOKEN_NEED.message,
-        null
-      )
-      response.writer.write(ObjectMapper().writeValueAsString(errResponse))
-      response.writer.flush()
+        val errorResponse = ResponseProvider.failed(
+          HttpStatus.UNAUTHORIZED,
+          ErrorCode.ACCESS_TOKEN_NEED.message,
+          null
+        )
+        response.writer.write(ObjectMapper().writeValueAsString(errorResponse))
+        response.writer.flush()
+      }
     }
+
+    filterChain.doFilter(request, response)
   }
 
   private fun shouldPerformAuthentication(uri: String): Boolean {
