@@ -20,6 +20,9 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
+  // security
+  implementation("org.springframework.boot:spring-boot-starter-security")
+
   // mysql
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("mysql:mysql-connector-java:8.0.33")

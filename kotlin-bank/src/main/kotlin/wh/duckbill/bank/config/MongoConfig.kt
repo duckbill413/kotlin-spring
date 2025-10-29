@@ -25,7 +25,7 @@ class MongoConfig(
 ) {
 
   @Bean
-  fun mongoTemplate(): HashMap<String, MongoTemplate> {
+  fun template(): HashMap<String, MongoTemplate> {
     val mapper = HashMap<String, MongoTemplate>(MongoTableCollector.entries.size)
     val settings = MongoClientSettings.builder()
       .uuidRepresentation(org.bson.UuidRepresentation.STANDARD) // BSON 표준 -> 기본 설정

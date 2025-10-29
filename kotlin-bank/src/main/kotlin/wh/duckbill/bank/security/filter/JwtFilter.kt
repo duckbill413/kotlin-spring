@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
-import org.springframework.util.PathMatcher
+import org.springframework.util.AntPathMatcher
 import org.springframework.web.filter.OncePerRequestFilter
 import wh.duckbill.bank.common.exception.CustomException
 import wh.duckbill.bank.common.exception.ErrorCode
@@ -21,8 +21,9 @@ private val JWT_AUTH_ENDPOINT = arrayOf(
 @Component
 class JwtFilter(
   private val jwtProvider: JwtProvider,
-  private val pathMatcher: PathMatcher,
 ) : OncePerRequestFilter() {
+
+  private final val pathMatcher = AntPathMatcher()
 
   override fun doFilterInternal(
     request: HttpServletRequest,
