@@ -26,11 +26,11 @@ dependencies {
   // mysql
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("mysql:mysql-connector-java:8.0.33")
-  implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
   // mongo
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+  implementation("org.jetbrains.kotlin:kotlin-reflect")
 
   // client
   implementation("com.squareup.okhttp3:okhttp:4.12.0")
