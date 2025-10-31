@@ -1,0 +1,19 @@
+database:
+  redis:
+    host: localhost
+    port: 6379
+    password: 123456
+    database: 0
+    timeout: 10000
+  redisson:
+    host: redis://127.0.0.1:6379
+    timeout: 10000
+    password: 123456
+  mongo:
+    uri: mongodb://root:123456@localhost:27017/kotlin-bank
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server.port: 9090
