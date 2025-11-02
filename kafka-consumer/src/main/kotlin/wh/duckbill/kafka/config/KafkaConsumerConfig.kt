@@ -7,8 +7,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.annotation.EnableKafka
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory
+import org.springframework.kafka.listener.AcknowledgingMessageListener
+import org.springframework.kafka.listener.ContainerProperties
 import org.springframework.kafka.support.serializer.JsonDeserializer
-import kotlin.jvm.java
+import wh.duckbill.kafka.`interface`.Handler
 
 @EnableKafka
 @Configuration
@@ -31,12 +35,51 @@ class KafkaConsumerConfig(
 
     // config value
     props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = topicConfig.info.bootstrapServers // 연결하고자 하는 서버 url
-    props[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = topicConfig.info.consumer.autoOffsetReset // 초기의 오프셋 위치를 설정 (earliest, latest, none
-    props[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = topicConfig.info.consumer.autoCommit // auto commit (메시지를 읽은 후 명시적으로 커밋을 설정 <= false)
+    /**
+     * 총 100개의 메시지가 있는 경우
+     * earliest: 새로운 컨슈머가 값을 읽기 시작 -> 0 부터 읽기 시작 0...99
+     * lastest: 마지막 99번째의 데이터만 읽음
+     */
+    props[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] =
+      topicConfig.info.consumer.autoOffsetReset // 초기의 오프셋 위치를 설정 (earliest, latest, none)
+    props[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] =
+      topicConfig.info.consumer.autoCommit // auto commit (메시지를 읽은 후 명시적으로 커밋을 설정 <= false)
     props[ConsumerConfig.GROUP_ID_CONFIG] = topicConfig.info.consumer.groupId
 
     props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
     props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JsonDeserializer::class.java
     return props
+  }
+
+  private fun createKafkaListenerContainerFactory(
+    topicName: String,
+    handler: Handler,
+    properties: TopicProperties,
+  ): ConcurrentKafkaListenerContainerFactory<String, Any> {
+    val config = consumerConfig().toMutableMap()
+
+    config[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = properties.maxPollRecords  // 단일 폴링 레코드에서 최대 반환 가능한 레코드의 개수
+
+    val consumerFactory = DefaultKafkaConsumerFactory<String, Any>(config)
+    val factory = ConcurrentKafkaListenerContainerFactory<String, Any>()
+
+    factory.consumerFactory = consumerFactory
+    factory.containerProperties.ackMode =
+      ContainerProperties.AckMode.MANUAL  // 데이터 일관성 보장에 대한 옵션 (메시지 처리후 명시적 처리 autoCommit -> false 인 경우 주로 사용
+    factory.setAutoStartup(true)  // 애플리케이션 시작 시점에 자동으로 컨테이너를 시작
+    factory.containerProperties.pollTimeout = properties.pollingInterval
+
+    val container = factory.createContainer(topicName)
+
+    // 메시지 처리 및 수동 확인을 지원하는 리스너
+    container.setupMessageListener(AcknowledgingMessageListener { record, acknowledgment ->
+      try {
+        handler.handle(record, acknowledgment)
+      } catch (e: Exception) {
+        handler.handleDLQ(record, acknowledgment)
+      }
+    })
+
+    return factory
   }
 }
