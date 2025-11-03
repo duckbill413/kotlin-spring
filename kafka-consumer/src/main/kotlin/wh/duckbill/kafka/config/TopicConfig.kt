@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @ConfigurationProperties(prefix = "kafka")
 data class TopicConfig(
-  var topics : Map<String, Any> = emptyMap(),
+  var topics: Map<String, TopicProperties> = emptyMap(),
   var info: KafkaInfo = KafkaInfo()
 )
 
@@ -22,7 +22,7 @@ data class KafkaInfo(
   var consumer: ConsumerConfig = ConsumerConfig()
 )
 
-data class ConsumerConfig (
+data class ConsumerConfig(
   var groupId: String = "my-consumer-group",
   val autoOffsetReset: String = "earliest",
   var autoCommit: Boolean = false

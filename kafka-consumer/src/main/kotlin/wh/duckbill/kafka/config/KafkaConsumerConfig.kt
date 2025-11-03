@@ -12,6 +12,8 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.listener.AcknowledgingMessageListener
 import org.springframework.kafka.listener.ContainerProperties
 import org.springframework.kafka.support.serializer.JsonDeserializer
+import wh.duckbill.kafka.common.exception.CustomException
+import wh.duckbill.kafka.common.exception.ErrorCode
 import wh.duckbill.kafka.`interface`.Handler
 
 @EnableKafka
@@ -50,6 +52,29 @@ class KafkaConsumerConfig(
     props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JsonDeserializer::class.java
     return props
   }
+
+  @Bean(name = ["factoryHandlerMapper"])
+  fun factoryHandlerMapper(): Map<String, ConcurrentKafkaListenerContainerFactory<String, Any>> {
+    val factoryMap = mutableMapOf<String, ConcurrentKafkaListenerContainerFactory<String, Any>>()
+    topicConfig.topics.forEach { (topicName, properties) ->
+      if (properties.enabled) {
+        var handler: Handler
+        when (topicName) {
+          // 필요한 경우에 따라 핸들러 매핑
+          // "transactions" -> handler = TransactionHandler()
+          TODO("핸들러 매핑")
+          else -> {
+            throw CustomException(ErrorCode.FAILED_TO_FIND_TOPIC)
+          }
+        }
+
+        factoryMap[topicName] = createKafkaListenerContainerFactory(topicName, handler, properties)
+      }
+    }
+
+    return factoryMap
+  }
+
 
   private fun createKafkaListenerContainerFactory(
     topicName: String,

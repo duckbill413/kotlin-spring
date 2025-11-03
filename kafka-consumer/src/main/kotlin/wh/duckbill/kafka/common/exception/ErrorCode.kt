@@ -29,5 +29,6 @@ enum class ErrorCode(
   FAILED_TO_CONNECT_MONGO(-116, "failed to connect mongo"),
   FAILED_TO_FIND_MONGO_TEMPLATE(-117, "failed to find mongo template"),
   ACCESS_TOKEN_NEED(-118, "access token need"),
+  FAILED_TO_FIND_TOPIC(-119, "failed to find topic"),
   ;
 }
