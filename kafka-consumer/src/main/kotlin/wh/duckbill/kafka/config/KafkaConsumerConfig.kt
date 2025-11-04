@@ -12,6 +12,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.listener.AcknowledgingMessageListener
 import org.springframework.kafka.listener.ContainerProperties
 import org.springframework.kafka.support.serializer.JsonDeserializer
+import wh.duckbill.kafka.common.consumer.handler.BankTransactionHandler
 import wh.duckbill.kafka.common.exception.CustomException
 import wh.duckbill.kafka.common.exception.ErrorCode
 import wh.duckbill.kafka.`interface`.Handler
@@ -19,6 +20,7 @@ import wh.duckbill.kafka.`interface`.Handler
 @EnableKafka
 @Configuration
 class KafkaConsumerConfig(
+  private val bankTransactionHandler: BankTransactionHandler,
   private val topicConfig: TopicConfig,
   private val logger: Logger = LoggerFactory.getLogger(KafkaConsumerConfig::class.java),
 ) {
@@ -62,7 +64,7 @@ class KafkaConsumerConfig(
         when (topicName) {
           // 필요한 경우에 따라 핸들러 매핑
           // "transactions" -> handler = TransactionHandler()
-          TODO("핸들러 매핑")
+          "transactions" -> handler = bankTransactionHandler
           else -> {
             throw CustomException(ErrorCode.FAILED_TO_FIND_TOPIC)
           }
