@@ -11,10 +11,10 @@ import java.time.LocalDateTime
 @Serializable
 data class History(
   val fromUlid: String,
-  val fromUser: String,
+  val fromName: String,
 
   val toUlid: String,
-  val toUser: String,
+  val toName: String,
 
   @Serializable(with = BigDecimalSerializer::class)
   val value: BigDecimal,
@@ -23,20 +23,20 @@ data class History(
   val time: LocalDateTime,
 )
 
-fun TransactionHistoryDocument.toHistory(fromUser: String, toUser: String): History = History(
+fun TransactionHistoryDocument.toHistory(): History = History(
   fromUlid = fromUlid,
-  fromUser = fromUser,
+  fromName = fromUlid,
   toUlid = toUlid,
-  toUser = toUser,
+  toName = toUlid,
   value = value,
   time = time,
 )
 
-fun TransactionMessage.toHistory(fromUser: String, toUser: String): History = History(
+fun TransactionMessage.toHistory(): History = History(
   fromUlid = fromUlid,
-  fromUser = fromUser,
+  fromName = fromName,
   toUlid = toUlid,
-  toUser = toUser,
+  toName = toName,
   value = value,
   time = time,
 )

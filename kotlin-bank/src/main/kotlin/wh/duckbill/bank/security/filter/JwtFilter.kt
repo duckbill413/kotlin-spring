@@ -15,7 +15,7 @@ import wh.duckbill.bank.types.dto.ResponseProvider
 
 private val JWT_AUTH_ENDPOINT = arrayOf(
   "/api/v1/bank/**",
-  "/api/v1/history/**"
+//  "/api/v1/history/**"
 )
 
 @Component

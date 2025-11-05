@@ -17,18 +17,18 @@ import java.util.concurrent.ConcurrentHashMap
 class HistoryMongoRepository(
   private val mongoTemplate: HashMap<String, MongoTemplate>,
   private val historyUserRepository: HistoryUserRepository,
-  private val userNameMapper: ConcurrentHashMap<String, String> = ConcurrentHashMap()
+  private val userNameMapper: ConcurrentHashMap<String, String> = ConcurrentHashMap(),
 ) {
 
   fun findLatestTransactionHistory(ulid: String, limit: Int = 30): List<History> {
     val criteria = Criteria().orOperator(
       Criteria.where("fromUlid").`is`(ulid),
-      Criteria.where("toUlid").`is`(ulid),
+      Criteria.where("toUlid").`is`(ulid)
     )
 
     val query = Query(criteria)
-      .with(Sort.by(Sort.Direction.ASC, "time"))
-      .limit(limit)
+      .with(Sort.by(Sort.Direction.DESC, "time"))
+      .limit(30)
 
     query.fields().exclude("_id")
 
@@ -36,9 +36,9 @@ class HistoryMongoRepository(
       getTemplate(MongoTableCollector.Bank).find(query, TransactionHistoryDocument::class.java)
 
     return result.map { doc ->
-      val fromName = getUserName(doc.fromUlid)
-      val toName = getUserName(doc.toUlid)
-      doc.toHistory(fromName, toName)
+      val fromUser = getUserName(doc.fromUlid)
+      val toUser = getUserName(doc.toUlid)
+      doc.toHistory(fromUser, toUser)
     }
   }
 

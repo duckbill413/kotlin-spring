@@ -36,7 +36,7 @@ class MongoConfig(
     for (c in MongoTableCollector.entries) {
       try {
         val client = MongoClients.create(settings)
-        mapper[c.name] = MongoTemplate(client, c.table)
+        mapper[c.table] = MongoTemplate(client, c.table)
       } catch (e: Exception) {
         throw CustomException(ErrorCode.FAILED_TO_CONNECT_MONGO, e.message)
       }

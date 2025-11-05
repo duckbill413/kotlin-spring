@@ -11,7 +11,6 @@ import org.springframework.data.mongodb.config.EnableMongoAuditing
 import org.springframework.data.mongodb.core.MongoTemplate
 import wh.duckbill.kafka.common.exception.CustomException
 import wh.duckbill.kafka.common.exception.ErrorCode
-import kotlin.collections.set
 
 enum class MongoTableCollector(
   val table: String,
@@ -37,7 +36,7 @@ class MongoConfig(
     for (c in MongoTableCollector.entries) {
       try {
         val client = MongoClients.create(settings)
-        mapper[c.name] = MongoTemplate(client, c.table)
+        mapper[c.table] = MongoTemplate(client, c.table)
       } catch (e: Exception) {
         throw CustomException(ErrorCode.FAILED_TO_CONNECT_MONGO, e.message)
       }

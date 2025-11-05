@@ -10,8 +10,8 @@ import org.springframework.kafka.annotation.EnableKafka
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.listener.AcknowledgingMessageListener
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer
 import org.springframework.kafka.listener.ContainerProperties
-import org.springframework.kafka.support.serializer.JsonDeserializer
 import wh.duckbill.kafka.common.consumer.handler.BankTransactionHandler
 import wh.duckbill.kafka.common.exception.CustomException
 import wh.duckbill.kafka.common.exception.ErrorCode
@@ -19,11 +19,11 @@ import wh.duckbill.kafka.`interface`.Handler
 
 @EnableKafka
 @Configuration
-class KafkaConsumerConfig(
+class KafkaConsumer(
   private val bankTransactionHandler: BankTransactionHandler,
   private val topicConfig: TopicConfig,
-  private val logger: Logger = LoggerFactory.getLogger(KafkaConsumerConfig::class.java),
 ) {
+  private val logger: Logger = LoggerFactory.getLogger(KafkaConsumer::class.java)
 
   @Bean
   fun consumerConfig(): Map<String, Any> {
@@ -34,8 +34,8 @@ class KafkaConsumerConfig(
     props[ConsumerConfig.RECONNECT_BACKOFF_MAX_MS_CONFIG] = 10000L  // 최대 재연결 간격 (ms)
     props[ConsumerConfig.RETRY_BACKOFF_MS_CONFIG] = 5000L // 실패한 요청에 대해서 재시도 간격 (ms)
 
-    props[ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG] = 15000L // 컨슈머와 브로커와의 세션을 유지하는 최대 시간
-    props[ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG] = 3000L  // heartbeat 전송 간격
+    props[ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG] = 15000 // 컨슈머와 브로커와의 세션을 유지하는 최대 시간
+    props[ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG] = 3000  // heartbeat 전송 간격
 
     // config value
     props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = topicConfig.info.bootstrapServers // 연결하고자 하는 서버 url
@@ -51,16 +51,18 @@ class KafkaConsumerConfig(
     props[ConsumerConfig.GROUP_ID_CONFIG] = topicConfig.info.consumer.groupId
 
     props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
-    props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JsonDeserializer::class.java
+    props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
+
     return props
   }
 
   @Bean(name = ["factoryHandlerMapper"])
-  fun factoryHandlerMapper(): Map<String, ConcurrentKafkaListenerContainerFactory<String, Any>> {
-    val factoryMap = mutableMapOf<String, ConcurrentKafkaListenerContainerFactory<String, Any>>()
+  fun factoryHandlerMapper(): Map<String, ConcurrentMessageListenerContainer<String, Any>> {
+    val containerMap = mutableMapOf<String, ConcurrentMessageListenerContainer<String, Any>>()
     topicConfig.topics.forEach { (topicName, properties) ->
       if (properties.enabled) {
         var handler: Handler
+        logger.info("handler mapping start. topic: $topicName, properties: $properties")
         when (topicName) {
           // 필요한 경우에 따라 핸들러 매핑
           // "transactions" -> handler = TransactionHandler()
@@ -69,18 +71,26 @@ class KafkaConsumerConfig(
             throw CustomException(ErrorCode.FAILED_TO_FIND_TOPIC)
           }
         }
+        val factory = createKafkaListenerContainerFactory(properties)
+        val container = factory.createContainer(topicName)
+        // 메시지 처리 및 수동 확인을 지원하는 리스너
+        container.setupMessageListener(AcknowledgingMessageListener { record, acknowledgment ->
+          try {
+            handler.handle(record, acknowledgment)
+          } catch (e: Exception) {
+            handler.handleDLQ(record, acknowledgment)
+          }
+        })
 
-        factoryMap[topicName] = createKafkaListenerContainerFactory(topicName, handler, properties)
+        containerMap[topicName] = container
       }
     }
 
-    return factoryMap
+    return containerMap
   }
 
 
   private fun createKafkaListenerContainerFactory(
-    topicName: String,
-    handler: Handler,
     properties: TopicProperties,
   ): ConcurrentKafkaListenerContainerFactory<String, Any> {
     val config = consumerConfig().toMutableMap()
@@ -93,19 +103,7 @@ class KafkaConsumerConfig(
     factory.consumerFactory = consumerFactory
     factory.containerProperties.ackMode =
       ContainerProperties.AckMode.MANUAL  // 데이터 일관성 보장에 대한 옵션 (메시지 처리후 명시적 처리 autoCommit -> false 인 경우 주로 사용
-    factory.setAutoStartup(true)  // 애플리케이션 시작 시점에 자동으로 컨테이너를 시작
     factory.containerProperties.pollTimeout = properties.pollingInterval
-
-    val container = factory.createContainer(topicName)
-
-    // 메시지 처리 및 수동 확인을 지원하는 리스너
-    container.setupMessageListener(AcknowledgingMessageListener { record, acknowledgment ->
-      try {
-        handler.handle(record, acknowledgment)
-      } catch (e: Exception) {
-        handler.handleDLQ(record, acknowledgment)
-      }
-    })
 
     return factory
   }
