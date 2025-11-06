@@ -82,12 +82,11 @@ class TransactionService(
       val key = RedisKeyProvider.bankMutexKey(fromUlid, fromAccountId)
       redisClient.invokeWithMutex(key) {
         transactional.run {
-          val fromUser = transactionsUser.findByUlid(fromUlid)
-          val fromAccount = transactionsAccount.findByUlidAndUser(fromAccountId, fromUser)
+          val fromAccount = transactionsAccount.findByUlid(fromAccountId)
             ?: throw CustomException(ErrorCode.FAILED_TO_FIND_ACCOUNT)
 
-          val toAccount =
-            transactionsAccount.findByUlid(toAccountId) ?: throw CustomException(ErrorCode.FAILED_TO_FIND_ACCOUNT)
+          val toAccount = transactionsAccount.findByUlid(toAccountId)
+            ?: throw CustomException(ErrorCode.FAILED_TO_FIND_ACCOUNT)
 
           if (fromAccount.balance < value) {
             throw CustomException(ErrorCode.ENOUGH_VALUE)
@@ -104,9 +103,9 @@ class TransactionService(
           val message = JsonUtil.encodeToJson(
             TransactionMessage(
               fromUlid = fromUlid,
-              fromName = fromUser.username,
+              fromName = fromAccount.user.username,
               fromAccountId = fromAccountId,
-              toUlid = toAccountId,
+              toUlid = toAccount.user.ulid,
               toName = toAccount.user.username,
               toAccountId = toAccountId,
               value = value,
